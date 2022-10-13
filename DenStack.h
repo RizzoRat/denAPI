@@ -28,6 +28,13 @@
 #define DENSTACK_H
 #include "squirrel.h"
 #include "../DenAPI/DenBound.h"
+
+//helper defines, to get member startcode more easily
+#define den_member_start(vm,stckname,thisname,typ) _DENAPI::stack sa(vm);  typ* thisname=sa.GetInstancePtr<typ>(1); if (!den_assert(thisname,vm,"illegal member call")) { return SQ_ERROR ; }
+#define den_default_start(v,clsstype) den_member_start(v,sa,pxThis,clsstype)
+
+
+
 //a simple stack helper class, fully inline
 namespace _DENAPI {
 
@@ -90,12 +97,14 @@ public:
 		::_DENAPI::DenSQUser* pxUser = static_cast<_DENAPI::DenSQUser*>(up);
 		return (pxUser->pclass != NULL) ;
 	}
+
+	
 private: 
 	//No external access to user pointers, (used for DenBound classes)
 	SQUserPointer GetInstanceUp(SQInteger idx,SQUserPointer tag=0) const
 	{	
 		SQUserPointer self;
-		if( SQ_FAILED(_DENAPI::s_SQAPI->getinstanceup(v,idx+_offs,(SQUserPointer*)&self,tag)) ) return 0;
+		if( SQ_FAILED(_DENAPI::s_SQAPI->getinstanceup(v,idx+_offs,(SQUserPointer*)&self,tag,false)) ) return 0;
 		return self;
 	}
 	SQUserPointer GetUserData(SQInteger idx,SQUserPointer tag=0)

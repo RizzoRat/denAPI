@@ -3,7 +3,7 @@
 //
 
 //
-// Copyright (c) 2016 Phobyx GmbH&Co.KG, Gerrit Meyer
+// Copyright (c) 2016-2022 Phobyx GmbH&Co.KG, Gerrit Meyer
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -39,7 +39,7 @@
 //You MUST NOT use another Squirrel to operate on gonuts VMs - crashes would be imminent due to special features, e.g. memory management, dtors and more
 
 
-#define HSQAPI_VERSION 2
+#define HSQAPI_VERSION 320
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +48,7 @@ extern "C" {
 	struct SQModCert
 	{
 	  SQInteger ModMagic ; //must be 0x13333331 (even on 64 bit systems) to make the cert struct valid
-	  SQModCert *previous ; //previous intermediate certificate in chain (if any) or NULL (for gonuts root cert)
+	  SQModCert *previous ; //previous intermediate certificate in chain (if any) or NULL (for root cert)
 	  SQInteger pubkeylen ; //length of the public key in bytes. 
 	  SQUserPointer pubkey ; //Pointer to the public key. (For Modules it usually is arbitrary data, not able to sign or validate anything)
 	  SQInteger signaturelen ; //length of the signature in bytes
@@ -117,6 +117,9 @@ extern "C" {
 		unsigned int version ;
 		void *API ; //pointer to a function list or ANY data the host defines. Needs a cast depending on name/version
 	} ;
+
+	
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// @cond DEV
     /// Allows modules to interface with Squirrel's C api without linking to the squirrel library
@@ -124,16 +127,22 @@ extern "C" {
 	/// Never change any prototypes or order of the first members, though! (compatibility/platform issues)
 	/// Avoid changing any existing members or member order.
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    typedef struct {
+	typedef struct {
+		void * Reserved; //reserved for later further extensions
+		//TODO: sqstdlib pointers
+	} API2StdLibExtension ;
+	typedef API2StdLibExtension* HSQSTDAPI ;
+	
+	typedef struct {
 	
 		//WARNING: No changes below this line!
 		SQmoduleAPIhead		sqconfig ;
 		SQInteger		APIVersion ;
 		HostSpecific	*UserHost;	  //Host specific API, if any, or NULL
-		void *			Reserved; //reserved for later extensions
+		void*		Reserved; 
 		
 		
-		//API Version 1 starts here
+		//API Version 1 starts here (Squirrel 3.1)
 				
         /*vm*/
 		SQInteger		(*getversion)() ;
@@ -199,10 +208,10 @@ extern "C" {
         SQRESULT        (*gettypetag)(HSQUIRRELVM v,SQInteger idx,SQUserPointer *typetag);
         void            (*setreleasehook)(HSQUIRRELVM v,SQInteger idx,SQRELEASEHOOK hook);
         SQChar*         (*getscratchpad)(HSQUIRRELVM v,SQInteger minsize);
-        SQRESULT        (*getclosureinfo)(HSQUIRRELVM v,SQInteger idx,SQUnsignedInteger *nparams,SQUnsignedInteger *nfreevars);
+        SQRESULT        (*getclosureinfo)(HSQUIRRELVM v,SQInteger idx,SQInteger *nparams,SQInteger *nfreevars);
         SQRESULT        (*setnativeclosurename)(HSQUIRRELVM v,SQInteger idx,const SQChar *name);
         SQRESULT        (*setinstanceup)(HSQUIRRELVM v, SQInteger idx, SQUserPointer p);
-        SQRESULT        (*getinstanceup)(HSQUIRRELVM v, SQInteger idx, SQUserPointer *p,SQUserPointer typetag);
+        SQRESULT        (*getinstanceup310)(HSQUIRRELVM v, SQInteger idx, SQUserPointer *p,SQUserPointer typetag); //Old prototype Squirrel 3.10, now wrapped for compatibility
         SQRESULT        (*setclassudsize)(HSQUIRRELVM v, SQInteger idx, SQInteger udsize);
         SQRESULT        (*newclass)(HSQUIRRELVM v,SQBool hasbase);
         SQRESULT        (*createinstance)(HSQUIRRELVM v,SQInteger idx);
@@ -276,15 +285,25 @@ extern "C" {
         SQRESULT        (*stackinfos)(HSQUIRRELVM v,SQInteger level,SQStackInfos *si);
         void            (*setdebughook)(HSQUIRRELVM v);
 		//API VERSION 1 ENDS HERE
-		//API VERSION 2 EXTENDS 1 BY:
+		//API VERSION 2 EXTENDS 1 BY (Squirrel 3.2)
+		SQRESULT        (*getinstanceup)(HSQUIRRELVM v, SQInteger idx, SQUserPointer *p,SQUserPointer typetag,SQBool throwerror); //Squirrel 3.2 prototype
+		SQRESULT		(*tailcall)(HSQUIRRELVM v, SQInteger nparams);
+		void			(*pushthread)(HSQUIRRELVM v, HSQUIRRELVM thread);
+		//API VERSION 2 ENDS HERE
+		//API VERSION 3 EXTENDS 2 BY:
+		// Maintainers will add new functions here
+
 		//sqstdlib:
 		//
 
 		
-
-		// Maintainers will add new functions here
+		//Introduced with API Vesion 2:
+		void		   *lastjumptableentry ; //last entry always has a value of 0xDEADBEEF !  (to allow for NULL pointers some day, whatever use they could have)
+		void		   *jumptableendmarkproof ; //where always followed by a NULL pointer.
+	
     } sq_api;
     typedef sq_api* HSQAPI;
+	
     /// @endcond
 
 ////////////////////////////////////////////////////////////
@@ -339,6 +358,8 @@ CDECL __attribute__((visibility("default")))  SQRESULT gonutsmodule_shutdown(HSQ
 //This function hence MUST NOT initialize ANY dynamic objects.
 //The passed in SQUserPointer is reserved for future use, expect it to be NULL
 //(Note: certificates can be issued using the gonuts toolchain, depending on your license and any CA certs you have)
+//
+
 
 #ifdef WIN32
 CDECL __declspec(dllexport)  const SQModCert * gonutsmodule_auth(SQUserPointer unused) ; //authentication call
