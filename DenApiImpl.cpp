@@ -121,7 +121,7 @@ namespace _DENAPI {
 		SQAPI->remove( v, -2 ); // remove class object from stack
 		// set userdata
 		_DENAPI::DenSQUser* pxUser = NULL;
-		SQAPI->getinstanceup( v, -1, (SQUserPointer*)&pxUser, 0 );
+		SQAPI->getinstanceup( v, -1, (SQUserPointer*)&pxUser, 0,false );
 		pxUser->pclass = pxObject;
 		pxUser->udType=1 ;
 		pxObject->OnCreation(v,-1) ;
@@ -135,7 +135,7 @@ namespace _DENAPI {
 	{
 		if (pxObject->GetSelfReference(v)._type!=OT_NULL) return SQ_ERROR ;
 		_DENAPI::DenSQUser* pxUser = NULL;
-		SQAPI->getinstanceup( v, stack_idx, (SQUserPointer*)&pxUser, pxObject->GetClassTypeTag() );
+		SQAPI->getinstanceup( v, stack_idx, (SQUserPointer*)&pxUser, pxObject->GetClassTypeTag(),false );
 		if (!pxUser) return SQ_ERROR ;
 		// initialize user data for instance 
 		pxObject->AddRef() ;
