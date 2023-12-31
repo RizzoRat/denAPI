@@ -62,6 +62,7 @@
 #define sq_newclass SQAPI->newclass
 #define sq_setclassudsize SQAPI->setclassudsize
 #define sq_getinstanceup SQAPI->getinstanceup
+#define sq_getinstanceup310 SQAPI->getinstanceup310
 #define sq_setinstanceup SQAPI->setinstanceup
 #define sq_setnativeclosurename SQAPI->setnativeclosurename
 #define sq_getclosureinfo SQAPI->getclosureinfo

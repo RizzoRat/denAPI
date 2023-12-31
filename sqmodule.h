@@ -3,7 +3,7 @@
 //
 
 //
-// Copyright (c) 2016-2022 Phobyx GmbH&Co.KG, Gerrit Meyer
+// Copyright (c) 2016-2024 Phobyx GmbH&Co.KG, Gerrit Meyer
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages

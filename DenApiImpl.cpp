@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 Phobyx GmbH&Co.KG, Gerrit Meyer
+// Copyright (c) 2024 Phobyx GmbH&Co.KG, Gerrit Meyer
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -121,7 +121,7 @@ namespace _DENAPI {
 		SQAPI->remove( v, -2 ); // remove class object from stack
 		// set userdata
 		_DENAPI::DenSQUser* pxUser = NULL;
-		SQAPI->getinstanceup( v, -1, (SQUserPointer*)&pxUser, 0,false );
+		SQAPI->getinstanceup310( v, -1, (SQUserPointer*)&pxUser, 0); //use 310 for compatibility
 		pxUser->pclass = pxObject;
 		pxUser->udType=1 ;
 		pxObject->OnCreation(v,-1) ;
@@ -132,16 +132,22 @@ namespace _DENAPI {
 	//Use this within constructor implementations. When a "constructor" is called, an empty class instance object already is on the top of the stack
 	//This function will bind a bound c++ instance to it. However, NEVER bind twice to the same squirrel instance or weird things may happen.
 	SQRESULT BindToInstanceOnStack( HSQUIRRELVM v, DenBoundInterface* pxObject, SQInteger stack_idx )
-	{
+	{		
 		if (pxObject->GetSelfReference(v)._type!=OT_NULL) return SQ_ERROR ;
+		
 		_DENAPI::DenSQUser* pxUser = NULL;
-		SQAPI->getinstanceup( v, stack_idx, (SQUserPointer*)&pxUser, pxObject->GetClassTypeTag(),false );
+		//use the wrapper for older Squirrel 3.1 parameters for backward compatibility
+		SQAPI->getinstanceup310( v, stack_idx, (SQUserPointer*)&pxUser, pxObject->GetClassTypeTag());		
 		if (!pxUser) return SQ_ERROR ;
 		// initialize user data for instance 
+		
 		pxObject->AddRef() ;
+		
 		pxUser->pclass=pxObject ;
 		pxUser->udType=1 ;
+		
 		pxObject->OnCreation(v,stack_idx) ;
+		
 		SQAPI->setreleasehook( v, stack_idx, &_DENAPI::releasehook );
 		return SQ_OK ;
 	}

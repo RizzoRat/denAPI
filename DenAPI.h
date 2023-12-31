@@ -32,6 +32,20 @@
 #define DENAPI_H
 #include "../DenAPI/sqmodule.h"
 
+#if defined(_LP64)
+typedef unsigned long long den64 ;		
+typedef signed long long dens64 ;		
+
+// 64 Bit Windows
+#elif defined(_WIN64)
+typedef unsigned long long den64 ;		
+typedef signed long long dens64 ;		
+
+// 32 Bit any
+#else
+typedef unsigned long long den64 ;		
+typedef long long dens64 ;		
+#endif
 
 
 
@@ -106,10 +120,14 @@ typedef struct {
 		//SQRESULT	(*CreateEvent)		(HSQUIRRELVM v,densocket_t x) ;
 
 		//Binary stuff support (will accept strings, blobs and any of the two buffer classes, note that GetAnyBuffer will not work on EvBuffers though)
-		SQChar *	(*GetAnyBuffer)		(HSQUIRRELVM v,SQInteger idx,SQInteger *BufSiz) ; //get a pointer to any buffer object without copying. Returns null on failure or when a copy is needed
-		SQChar *	(*CopyAnybuffer)	(HSQUIRRELVM v,SQInteger idx,SQInteger *BufSiz) ;  //create a copy of any posssible buffer object. Returned value must be freed (via SQAPI->free)
+		SQChar *	(*GetAnyBuffer)		(HSQUIRRELVM v,SQInteger idx,SQInteger *BufSiz) ; //get a pointer to any buffer object without copying. Returns null on failure or when a copy is needed. Note: BufSiz NULL will not return any buffer size
+		SQChar *	(*CopyAnybuffer)	(HSQUIRRELVM v,SQInteger idx,SQInteger *BufSiz) ;  //create a copy of any posssible buffer object. Returned value must be freed (via SQAPI->free), if there's no buffer this returns NULL. 
 		//note that yet there is no direct support for things like Hash, base64encode/decode, tohex and the like; however you may manually use them easily via the stack utilizing SQAPI->sqcall
 		
+		//64bit class support. Note that the int64 instances are immutable, you can not change the "value" of an instance. Hence, all you can do is get the value and push an instance with the value
+		bool		(*isint64) (HSQUIRRELVM v,SQInteger idx) ; //check if the object on the stack at the index is an int64 instance
+		SQRESULT	(*getint64) (HSQUIRRELVM v,SQInteger idx,dens64 *target64) ; //get the value of the int64 at the given stack position, returns SQ_OK when done, otherwise SQ_ERROR
+		void		(*pushint64) (HSQUIRRELVM v,dens64 value) ; //push the given 64 bit value as int64 instance on the stack
 	} API;
 
 } denAPI;

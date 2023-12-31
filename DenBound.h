@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 Phobyx GmbH&Co.KG, Gerrit Meyer
+// Copyright (c) 2024 Phobyx GmbH&Co.KG, Gerrit Meyer
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -120,7 +120,8 @@ private:
 
 class DenBoundInterface : public DenRefCounted {
 public:
-	DenBoundInterface() {} ;// :m_iRefCount(0) {} 
+	DenBoundInterface()  {} ; //:m_iRefCount(0) {} ; //refcount moved to base class
+	//(However, it is initialized in DenRefCounted, so what's the damn difference?)
 	//DenBoundInterface( const DenBoundInterface& ) : m_iRefCount(0) {} 
 	//you MUST implement these:
 	//static const SQChar *ClassName() = 0 ;
@@ -153,12 +154,14 @@ public:
 		return true ;
 	}
 	//General public interface:
+	/*moved to base class:
 	inline void AddRef() { den_interlockedInc(&m_iRefCount); }
 	inline bool ReleaseRef() { if( den_interlockedDec(&m_iRefCount)==0 ) { delete this; return true ; } ; return false;}
 	inline den_interlocked_t GetRef()	{ return m_iRefCount; }
+	*/
 
 private:
-	den_interlocked_t m_iRefCount;
+	//den_interlocked_t m_iRefCount; moved to base class
 	selfrefmap_t m_selfreferences ;
 	den_mutex m_refmutex ;
 };

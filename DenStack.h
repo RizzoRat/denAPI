@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 Phobyx GmbH&Co.KG, Gerrit Meyer
+// Copyright (c) 2024 Phobyx GmbH&Co.KG, Gerrit Meyer
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -31,6 +31,7 @@
 
 //helper defines, to get member startcode more easily
 #define den_member_start(vm,stckname,thisname,typ) _DENAPI::stack sa(vm);  typ* thisname=sa.GetInstancePtr<typ>(1); if (!den_assert(thisname,vm,"illegal member call")) { return SQ_ERROR ; }
+//this one predefines the instance "this" pointer as "pxThis" and the stack object as "sa":
 #define den_default_start(v,clsstype) den_member_start(v,sa,pxThis,clsstype)
 
 
@@ -104,7 +105,7 @@ private:
 	SQUserPointer GetInstanceUp(SQInteger idx,SQUserPointer tag=0) const
 	{	
 		SQUserPointer self;
-		if( SQ_FAILED(_DENAPI::s_SQAPI->getinstanceup(v,idx+_offs,(SQUserPointer*)&self,tag,false)) ) return 0;
+		if( SQ_FAILED(_DENAPI::s_SQAPI->getinstanceup310(v,idx+_offs,(SQUserPointer*)&self,tag)) ) return 0;
 		return self;
 	}
 	SQUserPointer GetUserData(SQInteger idx,SQUserPointer tag=0)
